@@ -2,6 +2,8 @@
 
 A fine-tuned language model on the Spanish BOE (Official State Bulletin), using Fast.ai.
 
+It uses a [pre-trained Spanish TransformerXL language model](https://github.com/mmcctt00/SpanishTransformerXL).
+
 The idea is to facilitate:
 
 - Training classifiers
