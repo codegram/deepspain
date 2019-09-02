@@ -1,0 +1,6 @@
+click
+fastai
+torch
+jsonlines
+aiohttp
+flake8
