@@ -1,6 +1,10 @@
 click
-fastai
-torch
+fastai>=1.0.57
+torch>=1.2.0
+pandas>=0.25.1
 jsonlines
 aiohttp
 flake8
+pybind11
+hnswlib
+gradient
