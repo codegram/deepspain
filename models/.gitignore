@@ -1,0 +1,8 @@
+/empty_data
+/encoder_head.pth
+/model_head.pth
+/learner_head.pkl
+/small_empty_data
+/encoder_small_head.pth
+/model_small_head.pth
+/learner_small_head.pkl
