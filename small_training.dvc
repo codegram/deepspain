@@ -1,0 +1,38 @@
+md5: 1cc62b21084beee244d226262ffb4487
+cmd: python3 -m torch.distributed.launch --nproc_per_node=1 train.py data/sample_databunch.pkl
+  models/ pretrained/encoder.pth pretrained/itos.pkl --head-only
+deps:
+- md5: 7b199765dc67374d436df2d85ba00a8b
+  path: train.py
+- md5: 3e528b683178549881f98348d31a827f
+  path: data/sample_databunch.pkl
+- md5: 273f2bf368876aad4761e5bc14d8353e
+  path: pretrained/encoder.pth
+- md5: 1d63af1f87ac9de8ab6a24e9c3287620
+  path: pretrained/itos.pkl
+outs:
+- md5: eb67885984a9bdd5ced985bb70b779eb
+  path: models/empty_data
+  cache: true
+  metric: false
+  persist: false
+- md5: ca0e7e3410b1265990bfb45a2373bb42
+  path: models/encoder_head.pth
+  cache: true
+  metric: false
+  persist: false
+- md5: ff1d88c9832b1e31747bd9ad45adc525
+  path: models/model_head.pth
+  cache: true
+  metric: false
+  persist: false
+- md5: c6c828849e56a5c14d72f3f3bdc9659e
+  path: models/learner_head.pkl
+  cache: true
+  metric: false
+  persist: false
+- md5: 7896e21369e975cbd0a8794eb58ad2bf
+  path: models/accuracy.metric
+  cache: false
+  metric: true
+  persist: false

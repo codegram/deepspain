@@ -9,7 +9,12 @@ from fastai.basic_train import Learner
 from fastai.callback import MetricsList
 from fastai.callbacks import LearnerCallback, SaveModelCallback
 from fastai.distributed import ifnone
-from fastai.text import TransformerXL, language_model_learner
+from fastai.text import (
+    TransformerXL,
+    language_model_learner,
+    LanguageLearner,
+    TextLMDataBunch,
+)
 
 from deepspain.dataset import load_databunch
 
@@ -44,6 +49,22 @@ class PaperspaceLoggingCallback(LearnerCallback):
             )
             print(json.dumps(dict(chart=str(self.node) + "_" + name, x=epoch, y=value)))
         return True
+
+
+def validate_and_save(data: TextLMDataBunch, learn: LanguageLearner, suffix: str):
+    click.echo("Validating...")
+    learn.freeze()
+    learn.model.eval()
+    accuracy = learn.validate()[1].item()
+    f = open("models/accuracy.metric", "w")
+    f.write(str(accuracy))
+    f.close()
+    click.echo("Saving...")
+    learn.save("model_" + suffix)
+    learn.save_encoder("encoder_" + suffix)
+    click.echo("Exporting...")
+    data.export("models/empty_data")
+    learn.export("models/learner_" + suffix + ".pkl")
 
 
 @click.command()
@@ -92,60 +113,38 @@ def main(
     click.echo("Loading LM databunch...")
     data = load_databunch(Path(databunch))
 
+    data.path = Path(".")
     click.echo("Training language model...")
     learn = language_model_learner(
         data,
         TransformerXL,
         pretrained_fnames=[
-            pretrained_encoder.replace(".pth", ""),
-            pretrained_itos.replace(".pkl", ""),
+            "./../" + pretrained_encoder.replace(".pth", ""),
+            "./../" + pretrained_itos.replace(".pkl", ""),
         ],
-        drop_mult=0.3,
-    )
-    learn = learn.to_distributed(local_rank)
+        drop_mult=0.1,
+    ).to_distributed(local_rank)
     learn.freeze()
     click.echo("Training model head...")
     learn.fit_one_cycle(
-        4,
-        1e-3,
-        callbacks=[
-            PaperspaceLoggingCallback(learn, node=local_rank),
-            SaveModelCallback(learn),
-        ],
+        1, 1e-3, callbacks=[SaveModelCallback(learn, name="bestmodel_head")]
     )
-    learn.load("bestmodel")
-    print(learn.validate())
+    learn.load("bestmodel_head")
 
-    if local_rank == 0:
-        click.echo("Saving...")
-        learn.save(output_path / "model")
-        learn.save_encoder(output_path / "encoder")
-        click.echo("Exporting...")
-        data.export(output_path / "empty_data")
-        learn.export(output_path / "export.pkl")
+    if local_rank == 0 and head_only:
+        validate_and_save(data, learn, "head")
 
     if not head_only:
         click.echo("Unfreezing and fine-tuning earlier layers...")
 
-        learn = learn.to_distributed(local_rank)
         learn.unfreeze()
-        learn.fit_one_cycle(
-            4,
-            1e-3,
-            callbacks=[
-                PaperspaceLoggingCallback(learn, node=local_rank),
-                SaveModelCallback(learn),
-            ],
-        )
-        learn.load("bestmodel")
-        click.echo("Saving...")
-        learn.save(output_path / "model_ft")
-        learn.save_encoder(output_path / "/encoder_ft")
-        click.echo("Exporting...")
-        learn.export(output_path / "/export_ft.pkl")
+        learn.fit_one_cycle(1, 1e-3)
+        if local_rank == 0:
+            validate_and_save(data, learn, "finetuned")
 
 
 if __name__ == "__main__":
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
         main()  # pylint: disable=no-value-for-parameter
+
