@@ -1,0 +1,7 @@
+md5: f06fc9c00f9f2e06bbf6baec0f2de0a6
+outs:
+- md5: 1d63af1f87ac9de8ab6a24e9c3287620
+  path: itos.pkl
+  cache: true
+  metric: false
+  persist: false

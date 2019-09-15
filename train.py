@@ -114,6 +114,7 @@ def main(
         ],
     )
     learn.load("bestmodel")
+    print(learn.validate())
 
     if local_rank == 0:
         click.echo("Saving...")

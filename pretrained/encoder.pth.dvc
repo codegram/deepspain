@@ -1,0 +1,7 @@
+md5: 7035db78ca469c3d68210160b9e2b41d
+outs:
+- md5: 273f2bf368876aad4761e5bc14d8353e
+  path: encoder.pth
+  cache: true
+  metric: false
+  persist: false

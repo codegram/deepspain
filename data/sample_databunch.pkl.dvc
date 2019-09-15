@@ -1,0 +1,7 @@
+md5: f0471363231c6f90acd0b01558d2af13
+outs:
+- md5: 3e528b683178549881f98348d31a827f
+  path: sample_databunch.pkl
+  cache: true
+  metric: false
+  persist: false

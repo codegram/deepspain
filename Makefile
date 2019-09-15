@@ -26,9 +26,9 @@ gputrain: deps databunch pretrained_model
 train:
 	gradient experiments run singlenode \
 		--name boe_language_model \
-		--projectId pr064oj2f \
+		--projectId przjwc38i \
 		--container paperspace/fastai:1.0-CUDA9.2-base-3.0-v1.0.6 \
-		--machineType GV100x8 \
+		--machineType P5000 \
 		--command 'make gputrain'
 
 .PHONY: lint deps
