@@ -6,3 +6,4 @@
 /encoder_small_head.pth
 /model_small_head.pth
 /learner_small_head.pkl
+/bestmodel*
