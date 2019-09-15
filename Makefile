@@ -1,23 +1,27 @@
-deps: requirements.txt
-	pip install --upgrade pip && pip install -r requirements.txt -U
+deps: environment.yaml
+	conda env create -f environment.yaml
+	conda activate deepspain
 
 lint:
-	flake8
+	python -m pylama
 
-/storage/boe/lm_data.pkl:
+/storage/boe:
+	mkdir -p /storage/boe
+
+/storage/boe/lm_data.pkl: /storage/boe
 	curl "https://s3-eu-west-1.amazonaws.com/datascience.codegram.com/lm_data.pkl" > /storage/boe/lm_data.pkl
 
-/storage/boe/itos.pkl:
+/storage/boe/itos.pkl: /storage/boe
 	curl "https://s3-eu-west-1.amazonaws.com/datascience.codegram.com/itos.pkl" > /storage/boe/itos.pkl
 
-/storage/boe/encM2.pth:
+/storage/boe/encM2.pth: /storage/boe
 	curl "https://s3-eu-west-1.amazonaws.com/datascience.codegram.com/encM2.pth" > /storage/boe/encM2.pth
 
 databunch: /storage/boe/lm_data.pkl
 pretrained_model: /storage/boe/itos.pkl /storage/boe/encM2.pth
 
 gputrain: deps databunch pretrained_model
-	bash gputrain.sh
+	bash scripts/gputrain.sh
 
 train:
 	gradient experiments run singlenode \

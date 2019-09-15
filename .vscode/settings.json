@@ -1,0 +1,5 @@
+{
+    "python.pythonPath": "/usr/local/anaconda3/envs/deepspain/bin/python",
+    "python.dataScience.jupyterServerURI": "local",
+    "python.formatting.provider": "black"
+}
