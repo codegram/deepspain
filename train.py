@@ -19,52 +19,22 @@ from fastai.text import (
 from deepspain.dataset import load_databunch
 
 
-class PaperspaceLoggingCallback(LearnerCallback):
-    def __init__(self, learn: Learner, node: int):
-        super().__init__(learn)
-        self.node = node
-
-    def on_train_begin(self, **kwargs: Any) -> None:
-        for name in self.learn.recorder.names:
-            print(json.dumps(dict(chart=name, axis=name)))
-
-    def on_epoch_end(
-        self,
-        epoch: int,
-        smooth_loss: torch.Tensor,
-        last_metrics: MetricsList,
-        **kwargs: Any,
-    ) -> bool:
-        "Add a line with `epoch` number, `smooth_loss` and `last_metrics`."
-        last_metrics = ifnone(last_metrics, [])
-        for name, stat in zip(
-            self.learn.recorder.names, [epoch, smooth_loss] + last_metrics
-        ):
-            value = (
-                str(stat)
-                if isinstance(stat, int)
-                else "#na#"
-                if stat is None
-                else f"{stat:.6f}"
-            )
-            print(json.dumps(dict(chart=str(self.node) + "_" + name, x=epoch, y=value)))
-        return True
-
-
-def validate_and_save(data: TextLMDataBunch, learn: LanguageLearner, suffix: str):
+def validate_and_save(
+    data: TextLMDataBunch, learn: LanguageLearner, label: str, suffix: str
+):
     click.echo("Validating...")
     learn.freeze()
     learn.model.eval()
     accuracy = learn.validate()[1].item()
-    f = open("models/accuracy.metric", "w")
+    f = open("models/" + label + "_accuracy.metric", "w")
     f.write(str(accuracy))
     f.close()
     click.echo("Saving...")
-    learn.save("model_" + suffix)
-    learn.save_encoder("encoder_" + suffix)
+    learn.save("model_" + label + "_" + suffix)
+    learn.save_encoder("encoder_" + label + "_" + suffix)
     click.echo("Exporting...")
-    data.export("models/empty_data")
-    learn.export("models/learner_" + suffix + ".pkl")
+    data.export("models/" + label + "_empty_data")
+    learn.export("models/learner_" + label + "_" + suffix + ".pkl")
 
 
 @click.command()
@@ -85,11 +55,18 @@ def validate_and_save(data: TextLMDataBunch, learn: LanguageLearner, suffix: str
     type=click.Path(exists=True, dir_okay=False),
 )
 @click.option(
+    "--label",
+    default="standard",
+    type=str,
+    help="Label to distinguish the trained model",
+)
+@click.option(
     "--head-only",
     is_flag=True,
     default=False,
     help="Train only the model's head (without fine-tuning the backbone)",
 )
+@click.option("--epochs", type=int, default=4, help="Number of epochs to train")
 @click.option(
     "--local_rank", type=int, help="Node number (set by pyTorch's distributed trainer)"
 )
@@ -98,7 +75,9 @@ def main(
     output_dir: str,
     pretrained_encoder: str,
     pretrained_itos: str,
+    label: str,
     head_only: bool,
+    epochs: int,
     local_rank: int,
 ):
     """Trains a Language Model, starting from pretrained weights, with data from <databunch.pkl>.
@@ -127,20 +106,22 @@ def main(
     learn.freeze()
     click.echo("Training model head...")
     learn.fit_one_cycle(
-        1, 1e-3, callbacks=[SaveModelCallback(learn, name="bestmodel_head")]
+        epochs,
+        1e-3,
+        callbacks=[SaveModelCallback(learn, name="bestmodel_" + label + "_head")],
     )
-    learn.load("bestmodel_head")
+    learn.load("bestmodel_" + label + "_head")
 
     if local_rank == 0 and head_only:
-        validate_and_save(data, learn, "head")
+        validate_and_save(data, learn, label, "head")
 
     if not head_only:
         click.echo("Unfreezing and fine-tuning earlier layers...")
 
         learn.unfreeze()
-        learn.fit_one_cycle(1, 1e-3)
+        learn.fit_one_cycle(epochs, 1e-3)
         if local_rank == 0:
-            validate_and_save(data, learn, "finetuned")
+            validate_and_save(data, learn, label, "finetuned")
 
 
 if __name__ == "__main__":

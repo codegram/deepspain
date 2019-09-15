@@ -1,15 +1,15 @@
 #!/bin/bash
 
 gpu_count=$(nvidia-smi --query-gpu=gpu_name --format=csv | grep '[^name]' | wc -l)
-dvc run -f small_training.dvc \
+dvc run -f train_small.dvc \
     -d train.py -d data/sample_databunch.pkl \
 	-d pretrained/encoder.pth \
 	-d pretrained/itos.pkl \
-	-o models/empty_data \
-	-o models/encoder_head.pth \
-	-o models/model_head.pth \
-	-o models/learner_head.pkl \
-    -M models/accuracy.metric \
+	-o models/small_empty_data \
+	-o models/encoder_small_head.pth \
+	-o models/model_small_head.pth \
+	-o models/learner_small_head.pkl \
+    -M models/small_accuracy.metric \
     python3 -m torch.distributed.launch \
         --nproc_per_node=$gpu_count \
         train.py \
@@ -17,4 +17,6 @@ dvc run -f small_training.dvc \
         models/ \
         pretrained/encoder.pth \
         pretrained/itos.pkl\
+        --label small \
+        --epochs 1 \
         --head-only
