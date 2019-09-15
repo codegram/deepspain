@@ -66,7 +66,15 @@ def validate_and_save(
     default=False,
     help="Train only the model's head (without fine-tuning the backbone)",
 )
-@click.option("--epochs", type=int, default=4, help="Number of epochs to train")
+@click.option(
+    "--head-epochs", type=int, default=4, help="Number of epochs to train the head"
+)
+@click.option(
+    "--backbone-epochs",
+    type=int,
+    default=8,
+    help="Number of epochs to train the backbone",
+)
 @click.option(
     "--local_rank", type=int, help="Node number (set by pyTorch's distributed trainer)"
 )
@@ -77,7 +85,8 @@ def main(
     pretrained_itos: str,
     label: str,
     head_only: bool,
-    epochs: int,
+    head_epochs: int,
+    backbone_epochs: int,
     local_rank: int,
 ):
     """Trains a Language Model, starting from pretrained weights, with data from <databunch.pkl>.
@@ -106,8 +115,9 @@ def main(
     learn.freeze()
     click.echo("Training model head...")
     learn.fit_one_cycle(
-        epochs,
+        head_epochs,
         1e-3,
+        moms=(0.8, 0.7),
         callbacks=[SaveModelCallback(learn, name="bestmodel_" + label + "_head")],
     )
     learn.load("bestmodel_" + label + "_head")
@@ -119,7 +129,7 @@ def main(
         click.echo("Unfreezing and fine-tuning earlier layers...")
 
         learn.unfreeze()
-        learn.fit_one_cycle(epochs, 1e-3)
+        learn.fit_one_cycle(backbone_epochs, 1e-3, moms=(0.8, 0.7))
         if local_rank == 0:
             validate_and_save(data, learn, label, "finetuned")
 

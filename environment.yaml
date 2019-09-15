@@ -6,6 +6,8 @@ dependencies:
       - click
       - aiohttp
       - black
+      - dvc
+      - boto3
       - elasticsearch==7.0.4
       - fastai==1.0.57
       - torch==1.2.0
