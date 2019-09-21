@@ -11,10 +11,10 @@ from fastai.text import (
     LanguageLearner,
     TextLMDataBunch,
 )
+from fastai.distributed import setup_distrib
 
 from deepspain.dataset import load_databunch
-from deepspain.tensorboard import TensorBoard
-
+from deepspain.tensorboard import LearnerTensorboardWriter
 
 def save(
     data: TextLMDataBunch,
@@ -72,6 +72,7 @@ def save(
     default=8,
     help="Number of epochs to train the backbone",
 )
+@click.option("--gpus", type=int, help="Total number of GPUs")
 @click.option(
     "--local_rank", type=int, help="Node number (set by pyTorch's distributed trainer)"
 )
@@ -84,6 +85,7 @@ def main(
     head_only: bool,
     head_epochs: int,
     backbone_epochs: int,
+    gpus: int,
     local_rank: int,
 ):
     """Trains a Language Model, starting from pretrained weights, with data from <databunch.pkl>.
@@ -91,9 +93,9 @@ def main(
     """
     output_path = Path(output_dir)
 
-    click.echo("Setting up distributed training...")
-    torch.cuda.set_device(local_rank)
-    torch.distributed.init_process_group(backend="nccl", init_method="env://")
+    if gpus > 1:
+        click.echo("Setting up distributed training...")
+        setup_distrib(local_rank)
 
     click.echo("Loading LM databunch...")
     data = load_databunch(Path(databunch))
@@ -108,18 +110,21 @@ def main(
             "./../" + pretrained_itos.replace(".pkl", ""),
         ],
         drop_mult=0.1,
-    ).to_distributed(local_rank)
-    learn.freeze()
-    click.echo("Training model head...")
+    )
+
+    tboard_path = Path("logs/" + label)
+    node_name = "gpu-" + str(local_rank)
     learn.callback_fns.append(
         partial(
-            TensorBoard,
-            label,
-            track_weight=True,
-            track_grad=True,
-            metric_names=["val loss", "accuracy"],
+            LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
         )
     )
+
+    if gpus > 1:
+        learn.to_distributed(local_rank)
+
+    learn.freeze()
+    click.echo("Training model head...")
     learn.fit_one_cycle(head_epochs, 1e-3, moms=(0.8, 0.7))
     click.echo("Validating...")
     accuracy = learn.validate()[1].item()

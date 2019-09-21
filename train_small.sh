@@ -18,5 +18,6 @@ dvc run -f train_small.dvc \
         pretrained/encoder.pth \
         pretrained/itos.pkl\
         --label small \
-        --head-epochs 4 \
+        --head-epochs 2 \
+	--gpus $gpu_count \
         --head-only

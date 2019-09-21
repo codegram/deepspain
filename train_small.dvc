@@ -1,9 +1,9 @@
-md5: de4d1b00d4bf94b4d0ff3dd49140cb0e
+md5: f4ca0d7d4510d54f0c89b5a72f5db4fe
 cmd: python3 -m torch.distributed.launch --nproc_per_node=2 train.py data/sample_databunch.pkl
-  models/ pretrained/encoder.pth pretrained/itos.pkl --label small --head-epochs 1
-  --head-only
+  models/ pretrained/encoder.pth pretrained/itos.pkl --label small --head-epochs 2
+  --gpus 2 --head-only
 deps:
-- md5: fc557a7ed3bd625da3353f17b6d32422
+- md5: d6ad557dff657ea570a422e92464a8fb
   path: train.py
 - md5: 3e528b683178549881f98348d31a827f
   path: data/sample_databunch.pkl
@@ -17,22 +17,22 @@ outs:
   cache: true
   metric: false
   persist: false
-- md5: a1bbfd0e027a0a6ec4b8c10286739f2d
+- md5: ecf13b4f32dfd5b608d448ddf4257179
   path: models/encoder_small_head.pth
   cache: true
   metric: false
   persist: false
-- md5: 2d17f281faf75ef291edbde722a63b63
+- md5: 444498742e7d6dd3d4f36fa0803ceb01
   path: models/model_small_head.pth
   cache: true
   metric: false
   persist: false
-- md5: 6d9ad81efebff8ce1b68e2ddd1ca0d11
+- md5: 9c855383005a7317fb303f18a3ca507f
   path: models/learner_small_head.pkl
   cache: true
   metric: false
   persist: false
-- md5: 3653d9979f44620497a2feac5b106dbb
+- md5: 47d0fe7ad9c008045617fe43d87415bd
   path: models/small_accuracy.metric
   cache: false
   metric: true
