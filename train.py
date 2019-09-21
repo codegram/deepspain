@@ -1,16 +1,10 @@
-import json
 import warnings
 from pathlib import Path
-from typing import Any
 
 from functools import partial
 
 import click
 import torch
-from fastai.basic_train import Learner
-from fastai.callback import MetricsList, LearnerTensorboardWriter
-from fastai.callbacks import LearnerCallback, SaveModelCallback
-from fastai.distributed import ifnone
 from fastai.text import (
     TransformerXL,
     language_model_learner,
@@ -19,6 +13,7 @@ from fastai.text import (
 )
 
 from deepspain.dataset import load_databunch
+from deepspain.tensorboard import TensorBoard
 
 
 def save(
@@ -116,10 +111,14 @@ def main(
     ).to_distributed(local_rank)
     learn.freeze()
     click.echo("Training model head...")
-    project_id = "deepspain"
-    tboard_path = Path("tensorboard/" + project_id)
     learn.callback_fns.append(
-        partial(LearnerTensorboardWriter, base_dir=tboard_path, name="run1")
+        partial(
+            TensorBoard,
+            label,
+            track_weight=True,
+            track_grad=True,
+            metric_names=["val loss", "accuracy"],
+        )
     )
     learn.fit_one_cycle(head_epochs, 1e-3, moms=(0.8, 0.7))
     click.echo("Validating...")
