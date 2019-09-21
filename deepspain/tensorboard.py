@@ -30,7 +30,6 @@ class LearnerTensorboardWriter(LearnerCallback):
         self,
         learn: Learner,
         gpus: int,
-        itos,
         base_dir: Path,
         name: str,
         loss_iters: int = 25,
@@ -47,7 +46,7 @@ class LearnerTensorboardWriter(LearnerCallback):
         )
         log_dir = base_dir / name
         self.gpus = gpus
-        self.itos = itos
+        self.itos = self.learn.data.vocab.itos
         self.tbwriter = SummaryWriter(str(log_dir))
         self.hist_writer = HistogramTBWriter()
         self.stats_writer = ModelStatsTBWriter()
@@ -124,22 +123,22 @@ class LearnerTensorboardWriter(LearnerCallback):
         "Writes embedding to Tensorboard."
         encoder = self._get_model()[0]
         decoder = self._get_model()[1]
+        print(len(self.itos))
         for name, emb in encoder.named_children():
             if isinstance(emb, nn.Embedding):
+                print(list(emb.parameters())[0].shape)
                 self.tbwriter.add_embedding(
                     list(emb.parameters())[0],
                     global_step=iteration,
                     tag=name,
                     metadata=self.itos,
                 )
-        for name, emb in decoder.named_children():
-            if isinstance(emb, nn.Embedding):
-                self.tbwriter.add_embedding(
-                    list(emb.parameters())[0],
-                    global_step=iteration,
-                    tag=name,
-                    metadata=self.itos,
-                )
+        if False:
+            for name, emb in decoder.named_children():
+                if isinstance(emb, nn.Embedding):
+                    self.tbwriter.add_embedding(
+                        list(emb.parameters())[0], global_step=iteration, tag=name
+                    )
 
     def on_train_begin(self, **kwargs: Any) -> None:
         self.graph_writer.write(

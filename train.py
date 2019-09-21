@@ -100,7 +100,17 @@ def main(
     click.echo("Loading LM databunch...")
     data = load_databunch(Path(databunch))
 
-    itos = data.train_ds.vocab.itos
+    # Do a bit a hack to save time
+    pretrained_special = ["_unk_", "_pad_", "xbos", "xfld"]
+    actual_special = ["xxunk", "xxpad", "xxbos", "xxfld"]
+
+    itos = [
+        pretrained_special[actual_special.index(word)]
+        if (word in actual_special)
+        else word
+        for word in data.train_ds.vocab.itos
+    ]
+    data.vocab.itos = itos
 
     data.path = Path(".")
     click.echo("Training language model...")
@@ -118,11 +128,7 @@ def main(
     node_name = "gpu-" + str(local_rank)
     learn.callback_fns.append(
         partial(
-            LearnerTensorboardWriter,
-            base_dir=tboard_path,
-            gpus=gpus,
-            name=node_name,
-            itos=itos,
+            LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
         )
     )
 
