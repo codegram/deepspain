@@ -20,7 +20,11 @@ from deepspain.dataset import load_databunch
 
 
 def save(
-    data: TextLMDataBunch, learn: LanguageLearner, label: str, suffix: str, accuracy: int
+    data: TextLMDataBunch,
+    learn: LanguageLearner,
+    label: str,
+    suffix: str,
+    accuracy: int,
 ):
     f = open("models/" + label + "_accuracy.metric", "w")
     f.write(str(accuracy))
@@ -110,15 +114,7 @@ def main(
     ).to_distributed(local_rank)
     learn.freeze()
     click.echo("Training model head...")
-    learn.fit_one_cycle(
-        head_epochs,
-        1e-3,
-        moms=(0.8, 0.7),
-        callbacks=[
-          # SaveModelCallback(learn, name="bestmodel_" + label + "_head")
-        ]
-    )
-    # learn.load("bestmodel_" + label + "_head")
+    learn.fit_one_cycle(head_epochs, 1e-3, moms=(0.8, 0.7))
     click.echo("Validating...")
     accuracy = learn.validate()[1].item()
 
@@ -130,9 +126,9 @@ def main(
 
         learn.unfreeze()
         learn.fit_one_cycle(backbone_epochs, 1e-3, moms=(0.8, 0.7))
-	
-    	click.echo("Validating...")
-    	accuracy = learn.validate()[1].item()
+
+        click.echo("Validating...")
+        accuracy = learn.validate()[1].item()
         if local_rank == 0:
             save(data, learn, label, "finetuned", accuracy)
 
@@ -141,4 +137,3 @@ if __name__ == "__main__":
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
         main()  # pylint: disable=no-value-for-parameter
-
