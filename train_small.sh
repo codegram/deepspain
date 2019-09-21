@@ -18,5 +18,5 @@ dvc run -f train_small.dvc \
         pretrained/encoder.pth \
         pretrained/itos.pkl\
         --label small \
-        --head-epochs 1 \
+        --head-epochs 4 \
         --head-only
