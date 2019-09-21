@@ -36,7 +36,7 @@ def save(
 
 def clean(word: str):
     w = word.replace("\n", "(newline)").replace("\t", "  ").replace("\u2002", " ")
-    return "".join([c if len(c.encode("utf-8")) < 4 else "?" for c in w])
+    return "".join([c if ord(c) < 1000 else "_" for c in w])
 
 
 @click.command()
