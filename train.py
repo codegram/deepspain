@@ -100,6 +100,8 @@ def main(
     click.echo("Loading LM databunch...")
     data = load_databunch(Path(databunch))
 
+    itos = data.train_ds.vocab.itos
+
     data.path = Path(".")
     click.echo("Training language model...")
     learn = language_model_learner(
@@ -116,7 +118,11 @@ def main(
     node_name = "gpu-" + str(local_rank)
     learn.callback_fns.append(
         partial(
-            LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
+            LearnerTensorboardWriter,
+            base_dir=tboard_path,
+            gpus=gpus,
+            name=node_name,
+            itos=itos,
         )
     )
 

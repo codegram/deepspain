@@ -30,6 +30,7 @@ class LearnerTensorboardWriter(LearnerCallback):
         self,
         learn: Learner,
         gpus: int,
+        itos,
         base_dir: Path,
         name: str,
         loss_iters: int = 25,
@@ -46,6 +47,7 @@ class LearnerTensorboardWriter(LearnerCallback):
         )
         log_dir = base_dir / name
         self.gpus = gpus
+        self.itos = itos
         self.tbwriter = SummaryWriter(str(log_dir))
         self.hist_writer = HistogramTBWriter()
         self.stats_writer = ModelStatsTBWriter()
@@ -120,12 +122,23 @@ class LearnerTensorboardWriter(LearnerCallback):
 
     def _write_embedding(self, iteration: int) -> None:
         "Writes embedding to Tensorboard."
-        for name, emb in self._get_model()[0].named_children():
+        encoder = self._get_model()[0]
+        decoder = self._get_model()[1]
+        for name, emb in encoder.named_children():
             if isinstance(emb, nn.Embedding):
-                print("embedding!")
-                print(list(emb.parameters()))
                 self.tbwriter.add_embedding(
-                    list(emb.parameters())[0], global_step=iteration, tag=name
+                    list(emb.parameters())[0],
+                    global_step=iteration,
+                    tag=name,
+                    metadata=self.itos,
+                )
+        for name, emb in decoder.named_children():
+            if isinstance(emb, nn.Embedding):
+                self.tbwriter.add_embedding(
+                    list(emb.parameters())[0],
+                    global_step=iteration,
+                    tag=name,
+                    metadata=self.itos,
                 )
 
     def on_train_begin(self, **kwargs: Any) -> None:
@@ -485,7 +498,7 @@ class GraphTBRequest(TBWriteRequest):
     "Request object for model histogram writes to Tensorboard."
 
     def __init__(
-        self, model: nn.Module, tbwriter: SummaryWriter, input_to_model: torch.Tensor
+        self, model: nn.Module, tbwriter: SummaryWriter, input_to_model: Tensor
     ):
         super().__init__(tbwriter=tbwriter, iteration=0)
         self.model, self.input_to_model = model, input_to_model
@@ -499,7 +512,7 @@ class GraphTBWriter:
     "Writes model network graph to Tensorboard."
 
     def write(
-        self, model: nn.Module, tbwriter: SummaryWriter, input_to_model: torch.Tensor
+        self, model: nn.Module, tbwriter: SummaryWriter, input_to_model: Tensor
     ) -> None:
         "Writes model graph to Tensorboard."
         request = GraphTBRequest(
