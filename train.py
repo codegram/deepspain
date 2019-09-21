@@ -19,13 +19,9 @@ from fastai.text import (
 from deepspain.dataset import load_databunch
 
 
-def validate_and_save(
-    data: TextLMDataBunch, learn: LanguageLearner, label: str, suffix: str
+def save(
+    data: TextLMDataBunch, learn: LanguageLearner, label: str, suffix: str, accuracy: int
 ):
-    click.echo("Validating...")
-    learn.freeze()
-    learn.model.eval()
-    accuracy = learn.validate()[1].item()
     f = open("models/" + label + "_accuracy.metric", "w")
     f.write(str(accuracy))
     f.close()
@@ -118,20 +114,27 @@ def main(
         head_epochs,
         1e-3,
         moms=(0.8, 0.7),
-        callbacks=[SaveModelCallback(learn, name="bestmodel_" + label + "_head")],
+        callbacks=[
+	  #SaveModelCallback(learn, name="bestmodel_" + label + "_head")
+	],
     )
-    learn.load("bestmodel_" + label + "_head")
+    #learn.load("bestmodel_" + label + "_head")
+    click.echo("Validating...")
+    accuracy = learn.validate()[1].item()
 
     if local_rank == 0 and head_only:
-        validate_and_save(data, learn, label, "head")
+        save(data, learn, label, "head", accuracy)
 
     if not head_only:
         click.echo("Unfreezing and fine-tuning earlier layers...")
 
         learn.unfreeze()
         learn.fit_one_cycle(backbone_epochs, 1e-3, moms=(0.8, 0.7))
+	
+    	click.echo("Validating...")
+    	accuracy = learn.validate()[1].item()
         if local_rank == 0:
-            validate_and_save(data, learn, label, "finetuned")
+            save(data, learn, label, "finetuned", accuracy)
 
 
 if __name__ == "__main__":
