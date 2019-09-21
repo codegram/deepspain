@@ -35,7 +35,12 @@ def save(
 
 
 def clean(word: str):
-    w = word.replace("\n", "(newline)").replace("\t", "  ").replace("\u2002", " ")
+    w = (
+        word.replace("\n", "(nl)")
+        .replace("\t", "(tab)")
+        .replace("\u2002", "(u2002)")
+        .replace(" ", "(sp)")
+    )
     return "".join([c if ord(c) < 1000 else "_" for c in w])
 
 
