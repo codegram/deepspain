@@ -34,6 +34,11 @@ def save(
     learn.export("models/learner_" + label + "_" + suffix + ".pkl")
 
 
+def clean(word: str):
+    w = word.replace("\n", "(newline)").replace("\t", "  ").replace("\u2002", " ")
+    return "".join([c if len(c.encode("utf-8")) < 4 else "?" for c in w])
+
+
 @click.command()
 @click.argument(
     "databunch", metavar="<databunch.pkl>", type=click.Path(exists=True, dir_okay=False)
@@ -104,11 +109,12 @@ def main(
     pretrained_special = ["_unk_", "_pad_", "xbos", "xfld"]
     actual_special = ["xxunk", "xxpad", "xxbos", "xxfld"]
 
+    print(len(list(filter(lambda x: "?" in x, data.vocab.itos))))
     itos = [
         pretrained_special[actual_special.index(word)]
         if (word in actual_special)
-        else word
-        for word in data.train_ds.vocab.itos
+        else clean(word)
+        for word in data.vocab.itos
     ]
     data.vocab.itos = itos
 

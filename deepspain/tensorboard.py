@@ -123,10 +123,8 @@ class LearnerTensorboardWriter(LearnerCallback):
         "Writes embedding to Tensorboard."
         encoder = self._get_model()[0]
         decoder = self._get_model()[1]
-        print(len(self.itos))
         for name, emb in encoder.named_children():
             if isinstance(emb, nn.Embedding):
-                print(list(emb.parameters())[0].shape)
                 self.tbwriter.add_embedding(
                     list(emb.parameters())[0],
                     global_step=iteration,
