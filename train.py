@@ -3,10 +3,12 @@ import warnings
 from pathlib import Path
 from typing import Any
 
+from functools import partial
+
 import click
 import torch
 from fastai.basic_train import Learner
-from fastai.callback import MetricsList
+from fastai.callback import MetricsList, LearnerTensorboardWriter
 from fastai.callbacks import LearnerCallback, SaveModelCallback
 from fastai.distributed import ifnone
 from fastai.text import (
@@ -114,6 +116,11 @@ def main(
     ).to_distributed(local_rank)
     learn.freeze()
     click.echo("Training model head...")
+    project_id = "deepspain"
+    tboard_path = Path("tensorboard/" + project_id)
+    learn.callback_fns.append(
+        partial(LearnerTensorboardWriter, base_dir=tboard_path, name="run1")
+    )
     learn.fit_one_cycle(head_epochs, 1e-3, moms=(0.8, 0.7))
     click.echo("Validating...")
     accuracy = learn.validate()[1].item()
