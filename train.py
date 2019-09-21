@@ -115,10 +115,10 @@ def main(
         1e-3,
         moms=(0.8, 0.7),
         callbacks=[
-	  #SaveModelCallback(learn, name="bestmodel_" + label + "_head")
-	],
+          # SaveModelCallback(learn, name="bestmodel_" + label + "_head")
+        ]
     )
-    #learn.load("bestmodel_" + label + "_head")
+    # learn.load("bestmodel_" + label + "_head")
     click.echo("Validating...")
     accuracy = learn.validate()[1].item()
 

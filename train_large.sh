@@ -18,5 +18,5 @@ dvc run -f train_large.dvc \
         pretrained/encoder.pth \
         pretrained/itos.pkl\
         --label large \
-        --head-epochs 4
+        --head-epochs 4 \
         --backbone-epochs 10
