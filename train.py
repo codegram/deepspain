@@ -136,7 +136,7 @@ def main(
     )
 
     tboard_path = Path("logs/" + label)
-    node_name = "gpu-" + str(local_rank)
+    node_name = "gpu-" + str(local_rank) + "-head" 
     learn.callback_fns.append(
         partial(
             LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
@@ -152,11 +152,33 @@ def main(
     click.echo("Validating...")
     accuracy = learn.validate()[1].item()
 
-    if local_rank == 0 and head_only:
+    if local_rank == 0:
         save(data, learn, label, "head", accuracy)
 
     if not head_only:
         click.echo("Unfreezing and fine-tuning earlier layers...")
+
+        learn = language_model_learner(
+            data,
+            TransformerXL,
+            pretrained_fnames=[
+                "./../" + pretrained_encoder.replace(".pth", ""),
+                "./../" + pretrained_itos.replace(".pkl", ""),
+            ],
+            drop_mult=0.1,
+        )
+
+        tboard_path = Path("logs/" + label)
+        node_name = "gpu-" + str(local_rank) + "-finetuned"
+        learn.callback_fns.append(
+            partial(
+                LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
+            )
+        )
+        if gpus > 1:
+            learn.to_distributed(local_rank)
+
+        learn.load("model_" + label + "_head")
 
         learn.unfreeze()
         learn.fit_one_cycle(backbone_epochs, 1e-3, moms=(0.8, 0.7))

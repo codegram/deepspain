@@ -121,6 +121,8 @@ class LearnerTensorboardWriter(LearnerCallback):
 
     def _write_embedding(self, iteration: int) -> None:
         "Writes embedding to Tensorboard."
+        print(type(self._get_model()))
+        print(type(self._get_model()[0]))
         encoder = self._get_model()[0].encoder
         self.tbwriter.add_embedding(
             list(encoder.parameters())[0],
