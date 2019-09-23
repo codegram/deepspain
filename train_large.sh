@@ -9,6 +9,7 @@ dvc run -f train_large.dvc \
 	-o models/encoder_large_head.pth \
 	-o models/model_large_head.pth \
 	-o models/learner_large_head.pkl \
+	-o logs/large \
     -M models/large_accuracy.metric \
     python3 -m torch.distributed.launch \
         --nproc_per_node=$gpu_count \
@@ -19,4 +20,5 @@ dvc run -f train_large.dvc \
         pretrained/itos.pkl\
         --label large \
         --head-epochs 4 \
-        --backbone-epochs 10
+        --backbone-epochs 10 \
+        --gpus $gpu_count
