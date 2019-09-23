@@ -16,6 +16,7 @@ from fastai.distributed import setup_distrib
 from deepspain.dataset import load_databunch
 from deepspain.tensorboard import LearnerTensorboardWriter
 
+
 def save(
     data: TextLMDataBunch,
     learn: LanguageLearner,
@@ -42,6 +43,40 @@ def clean(word: str):
         .replace(" ", "(sp)")
     )
     return "".join([c if ord(c) < 1000 else "_" for c in w])
+
+
+def initialize_learner(
+    data: TextLMDataBunch,
+    pretrained_encoder: str,
+    pretrained_itos: str,
+    local_rank: int,
+    label: str,
+    kind: str,
+    gpus: int,
+) -> LanguageLearner:
+    data.path = Path(".")
+    click.echo("Training language model...")
+    learn = language_model_learner(
+        data,
+        TransformerXL,
+        pretrained_fnames=[
+            "./../" + pretrained_encoder.replace(".pth", ""),
+            "./../" + pretrained_itos.replace(".pkl", ""),
+        ],
+        drop_mult=0.1,
+    )
+
+    tboard_path = Path("logs/" + label)
+    node_name = "gpu-" + str(local_rank) + "-" + kind
+    learn.callback_fns.append(
+        partial(
+            LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
+        )
+    )
+
+    if gpus > 1:
+        learn.to_distributed(local_rank)
+    return learn
 
 
 @click.command()
@@ -125,26 +160,9 @@ def main(
 
     data.path = Path(".")
     click.echo("Training language model...")
-    learn = language_model_learner(
-        data,
-        TransformerXL,
-        pretrained_fnames=[
-            "./../" + pretrained_encoder.replace(".pth", ""),
-            "./../" + pretrained_itos.replace(".pkl", ""),
-        ],
-        drop_mult=0.1,
+    learn = initialize_learner(
+        data, pretrained_encoder, pretrained_itos, local_rank, label, "head", gpus
     )
-
-    tboard_path = Path("logs/" + label)
-    node_name = "gpu-" + str(local_rank) + "-head" 
-    learn.callback_fns.append(
-        partial(
-            LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
-        )
-    )
-
-    if gpus > 1:
-        learn.to_distributed(local_rank)
 
     learn.freeze()
     click.echo("Training model head...")
@@ -158,25 +176,15 @@ def main(
     if not head_only:
         click.echo("Unfreezing and fine-tuning earlier layers...")
 
-        learn = language_model_learner(
+        learn = initialize_learner(
             data,
-            TransformerXL,
-            pretrained_fnames=[
-                "./../" + pretrained_encoder.replace(".pth", ""),
-                "./../" + pretrained_itos.replace(".pkl", ""),
-            ],
-            drop_mult=0.1,
+            pretrained_encoder,
+            pretrained_itos,
+            local_rank,
+            label,
+            "finetuned",
+            gpus,
         )
-
-        tboard_path = Path("logs/" + label)
-        node_name = "gpu-" + str(local_rank) + "-finetuned"
-        learn.callback_fns.append(
-            partial(
-                LearnerTensorboardWriter, base_dir=tboard_path, gpus=gpus, name=node_name
-            )
-        )
-        if gpus > 1:
-            learn.to_distributed(local_rank)
 
         learn.load("model_" + label + "_head")
 
