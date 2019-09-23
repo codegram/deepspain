@@ -1,0 +1,44 @@
+md5: 756ad25463746a7e572a085dd318eb5a
+cmd: python3 -m torch.distributed.launch --nproc_per_node=8 train.py data/lm_data.pkl
+  models/ pretrained/encoder.pth pretrained/itos.pkl --label large --head-epochs 4
+  --backbone-epochs 2 --gpus 8
+deps:
+- md5: 652acc7954ade70cc40c47bcde519eb4
+  path: train.py
+- md5: e80b9f35bff0c31f18359df8b251a375
+  path: data/lm_data.pkl
+- md5: 273f2bf368876aad4761e5bc14d8353e
+  path: pretrained/encoder.pth
+- md5: 1d63af1f87ac9de8ab6a24e9c3287620
+  path: pretrained/itos.pkl
+outs:
+- md5: 9063d4822e223dc5dcee374d1413c44a
+  path: models/large_empty_data
+  cache: true
+  metric: false
+  persist: false
+- md5: 4506432257b23107d12825cfb5f4f176
+  path: models/encoder_large_head.pth
+  cache: true
+  metric: false
+  persist: false
+- md5: 444145df2ec97f6fe53fb73f106c28d5
+  path: models/model_large_head.pth
+  cache: true
+  metric: false
+  persist: false
+- md5: 893553ed253a3560f2149271ebd6cdc7
+  path: models/learner_large_head.pkl
+  cache: true
+  metric: false
+  persist: false
+- md5: 481be1c9ee04eca46f3dfd397915646c.dir
+  path: logs/large
+  cache: true
+  metric: false
+  persist: false
+- md5: e41c5f245b5f5822a5f9f01b9c522013
+  path: models/large_accuracy.metric
+  cache: false
+  metric: true
+  persist: false

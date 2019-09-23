@@ -1,0 +1,7 @@
+md5: 57209836af1d48352e597d85ebfa1712
+outs:
+- md5: 81248de751c11640865df85b75738e19
+  path: model_large_finetuned.pth
+  cache: true
+  metric: false
+  persist: false

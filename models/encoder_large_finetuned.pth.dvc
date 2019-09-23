@@ -1,0 +1,7 @@
+md5: 069855373df0f223ac9eba07c292d25c
+outs:
+- md5: 7df8a732818bdfa465cb7281d2ac0a5b
+  path: encoder_large_finetuned.pth
+  cache: true
+  metric: false
+  persist: false

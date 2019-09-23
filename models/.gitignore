@@ -7,3 +7,10 @@
 /model_small_head.pth
 /learner_small_head.pkl
 /bestmodel*
+/large_empty_data
+/encoder_large_head.pth
+/model_large_head.pth
+/learner_large_head.pkl
+/encoder_large_finetuned.pth
+/learner_large_finetuned.pkl
+/model_large_finetuned.pth

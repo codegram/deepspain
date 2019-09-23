@@ -20,5 +20,5 @@ dvc run -f train_large.dvc \
         pretrained/itos.pkl\
         --label large \
         --head-epochs 4 \
-        --backbone-epochs 10 \
+        --backbone-epochs 2 \
         --gpus $gpu_count
