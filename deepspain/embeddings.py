@@ -9,8 +9,8 @@ from typing import Sequence, cast, Any
 def word_embeddings(learner: LanguageLearner, s: str, debug: bool = False) -> Tensor:
     tokens, _ = measure("tokenizing", lambda: learner.data.one_item(s), debug)
     measure("resetting model", lambda: learner.model.reset(), debug)
-    model = learner.model[0]
-    outputs = measure("predicting", lambda: model(tokens), debug)
+    encoder = learner.model[0]
+    outputs = measure("predicting", lambda: encoder(tokens), debug)
     embeddings = outputs[-1][-1]
     return embeddings
 

@@ -1,0 +1,7 @@
+md5: b1026cce241ece1d060d01d6192f4b34
+outs:
+- md5: 8fa39771eff483bcc7c1f4ecfda560cd
+  path: test.jsonlines
+  cache: true
+  metric: false
+  persist: false

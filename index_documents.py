@@ -5,7 +5,7 @@ import click
 from elasticsearch import Elasticsearch
 
 from deepspain.utils import measure
-from deepspain.model import load_for_inference
+from deepspain.model import from_encoder
 from deepspain.dataset import load_databunch
 from deepspain.search import recreate_index, index_document
 
@@ -59,9 +59,13 @@ def main(
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
+
         learner = measure(
-            "model loading", lambda: load_for_inference(models_path), debug
+            "encoder loading",
+            lambda: from_encoder(models_path, encoder_name="encoder_large_finetuned"),
+            debug,
         )
+
         es = Elasticsearch(hosts=[{"host": host, "port": port}])
         if drop_index:
             print("Recreating index...")
@@ -71,8 +75,13 @@ def main(
         total = df.shape[0]
         print(f"Indexing {total} rows...")
         for idx, row in df.iterrows():
-            print(f"{idx}/{total}")
-            index_document(es, learner, index_name, row.to_dict(), limit_bytes, debug)
+            measure(
+                f"{idx}/{total}",
+                lambda: index_document(
+                    es, learner, index_name, row.to_dict(), limit_bytes, debug
+                ),
+                debug,
+            )
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from elasticsearch import Elasticsearch
 from fire import Fire
 
 from deepspain.utils import measure
-from deepspain.model import load_for_inference
+from deepspain.model import from_encoder
 from deepspain.search import search
 
 
@@ -20,7 +20,9 @@ def main(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
         learner = measure(
-            "model loading", lambda: load_for_inference(models_path), debug
+            "model loading",
+            lambda: from_encoder(models_path, encoder_name="encoder_large_finetuned"),
+            debug,
         )
         es = Elasticsearch(hosts=[{"host": host, "port": port}])
         for result in search(es, learner, index_name, query, debug):
