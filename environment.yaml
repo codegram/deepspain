@@ -9,6 +9,7 @@ dependencies:
       - dvc
       - boto3
       - tensorflow
+      - tensorboardX
       - elasticsearch==7.0.4
       - fastai==1.0.57
       - torch==1.2.0
