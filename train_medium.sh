@@ -9,6 +9,9 @@ dvc run -f train_medium.dvc \
 	-o models/encoder_medium_head.pth \
 	-o models/model_medium_head.pth \
 	-o models/learner_medium_head.pkl \
+	-o models/encoder_medium_finetuned.pth \
+	-o models/model_medium_finetuned.pth \
+	-o models/learner_medium_finetuned.pkl \
     -M models/medium_accuracy.metric \
     python3 -m torch.distributed.launch \
         --nproc_per_node=$gpu_count \
@@ -18,5 +21,6 @@ dvc run -f train_medium.dvc \
         pretrained/encoder.pth \
         pretrained/itos.pkl\
         --label medium \
-        --head-epochs 2
-        --backbone-epochs 2
+        --head-epochs 1 \
+        --backbone-epochs 1 \
+        --gpus $gpu_count

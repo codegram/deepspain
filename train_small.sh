@@ -19,5 +19,5 @@ dvc run -f train_small.dvc \
         pretrained/itos.pkl\
         --label small \
         --head-epochs 2 \
-	    --gpus $gpu_count \
+	--gpus $gpu_count \
         --head-only
